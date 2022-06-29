@@ -2,7 +2,49 @@ pipeline {
     agent any
 
     stages {
+        stage('Verify parameters') {
+            steps {
+                script {
+                    pipelineStartTime = new Date().getTime()
+                    if (!params.PHASES) {
+                        println 'Missing parameter values. Failing build.'
+                        error("Some required parameters don't have a value. Provide a valid valid for all the required values")
+                    }
+
+                    print "Executing the following phases ${params.PHASES}"
+                    // keep track of what phases to run
+                    def individualPhases = params.PHASES.split(" ")
+
+                    runVerifyPhase = false
+                    runBuildPhase = false
+                    runDeployPhase = false
+                    runHardenPhase = false
+
+                    individualPhases.each {
+                        if (it == verify) {
+                            runVerifyPhase = true
+                        } else if (it == build) {
+                            runBuildPhase = true
+                        } else if (it == deploy) {
+                            // Run build to allow migration from deploy meaning build and deploy, allow window for jobs to updated
+                            runBuildPhase = true
+                            runDeployPhase = true
+                        } else if (it == harden) {
+                            runHardenPhase = true
+                        } else {
+                            error("Unknown phase $it")
+                        }
+                    }
+
+                }
+             }
+        }
+
         stage('Build') {
+           when {
+                expression {
+                    return runBuildPhase
+            }
             steps {
                 echo 'Building..'
             }
