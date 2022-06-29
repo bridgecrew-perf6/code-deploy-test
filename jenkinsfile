@@ -38,27 +38,28 @@ pipeline {
 
                 }
             }
+
+            stage('Build') {
+                when {
+                    expression {
+                        return runBuildPhase
+                    }
+                    steps {
+                        echo 'Building..'
+                    }
+                }
+                stage('Test') {
+                    steps {
+                        echo 'Testing..'
+                    }
+                }
+                stage('Deploy') {
+                    steps {
+                        echo 'Deploying....'
+                    }
+                }
+            }
         }
 
-        stage('Build') {
-            when {
-                expression {
-                    return runBuildPhase
-                }
-                steps {
-                    echo 'Building..'
-                }
-            }
-            stage('Test') {
-                steps {
-                    echo 'Testing..'
-                }
-            }
-            stage('Deploy') {
-                steps {
-                    echo 'Deploying....'
-                }
-            }
-        }
     }
 }
