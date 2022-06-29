@@ -1,0 +1,15 @@
+pipeline{
+  options{
+    skipDefaultCheckout()
+  }
+  
+  aget { any }
+  
+  stages {
+        stage('Echo message') {
+          echo 'Hello Seshu,  from Pipeline'
+        }
+  }
+        
+
+}
