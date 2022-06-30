@@ -1,7 +1,10 @@
 import jenkins.model.*
 
-
 pipeline {
+
+    parameters {
+        string(name: 'PHASES', description: 'See https://confluence.eng.vmware.com/display/WOR/Stack+update+sequence+for+Production#StackupdatesequenceforProduction-Proposedphases ', defaultValue: 'verify', trim: true)
+    }
     agent any
 
     stages {
@@ -12,35 +15,6 @@ pipeline {
 
                     println 'Missing parameter values. Failing build.'
                     echo "Running ${env.PHASES} on ${env.JENKINS_URL}"
-                    if (!env.PHASES) {
-                        println 'Missing parameter values. Failing build.'
-                        error("Some required parameters don't have a value. Provide a valid valid for all the required values")
-                    }
-
-                    print "Executing the following phases ${env.PHASES}"
-                    // keep track of what phases to run
-                    def individualPhases = env.PHASES.split(" ")
-
-                    runVerifyPhase = false
-                    runBuildPhase = false
-                    runDeployPhase = false
-                    runHardenPhase = false
-
-                    individualPhases.each {
-                        if (it == verify) {
-                            runVerifyPhase = true
-                        } else if (it == build) {
-                            runBuildPhase = true
-                        } else if (it == deploy) {
-                            // Run build to allow migration from deploy meaning build and deploy, allow window for jobs to updated
-                            runBuildPhase = true
-                            runDeployPhase = true
-                        } else if (it == harden) {
-                            runHardenPhase = true
-                        } else {
-                            error("Unknown phase $it")
-                        }
-                    }
 
                 }
             }
@@ -65,6 +39,56 @@ pipeline {
             steps {
                 echo 'Deploying....'
             }
+        }
+    }
+
+    post {
+        failure {
+            script {
+                // Change description color to red for failure
+                currentBuild.description = currentBuild.description?.replace("<FONT COLOR='blue'>", "<FONT COLOR='red'>")
+
+                // mark the current stage as failure
+                endPipelineStage(STAGE_COMPLETED_WITH_FAILURE)
+            }
+        }
+    }
+}
+
+
+def validatePhases() {
+    println("Inside  validatePhases method...")
+    if (!env.PHASES) {
+        println 'Missing parameter values. Failing build.'
+        error("Some required parameters don't have a value. Provide a valid valid for all the required values")
+    }
+
+    print "Executing the following phases ${env.PHASES}"
+    // keep track of what phases to run
+    def individualPhases = env.PHASES.split(" ")
+
+    runVerifyPhase = false
+    runBuildPhase = false
+    runDeployPhase = false
+    runHardenPhase = false
+
+    individualPhases.each {
+        print "Executing the following phases ${it}"
+        if (it == "verify") {
+            print "Phases is selected"
+            runVerifyPhase = true
+        } else if (it == "build") {
+            print "build is selected"
+            runBuildPhase = true
+        } else if (it == "deploy") {
+            // Run build to allow migration from deploy meaning build and deploy, allow window for jobs to updated
+            print "Phases is selected"
+            runBuildPhase = true
+            runDeployPhase = true
+        } else if (it == harden) {
+            runHardenPhase = true
+        } else {
+            error("Unknown phase $it")
         }
     }
 }
