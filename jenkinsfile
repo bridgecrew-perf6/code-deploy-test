@@ -9,14 +9,17 @@ pipeline {
             steps {
                 script {
                     pipelineStartTime = new Date().getTime()
-                    if (!params.PHASES) {
+
+                    println 'Missing parameter values. Failing build.'
+                    echo "Running ${env.PHASES} on ${env.JENKINS_URL}"
+                    if (!env.PHASES) {
                         println 'Missing parameter values. Failing build.'
                         error("Some required parameters don't have a value. Provide a valid valid for all the required values")
                     }
 
-                    print "Executing the following phases ${params.PHASES}"
+                    print "Executing the following phases ${env.PHASES}"
                     // keep track of what phases to run
-                    def individualPhases = params.PHASES.split(" ")
+                    def individualPhases = env.PHASES.split(" ")
 
                     runVerifyPhase = false
                     runBuildPhase = false
