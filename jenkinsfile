@@ -12,7 +12,7 @@ pipeline {
             steps {
                 script {
                     pipelineStartTime = new Date().getTime()
-
+                    validatePhases()
                     println 'Missing parameter values. Failing build.'
                     echo "Running ${env.PHASES} on ${env.JENKINS_URL}"
 
